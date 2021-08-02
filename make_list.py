@@ -2,9 +2,10 @@ import gensim
 import numpy as np
 from sklearn.manifold import TSNE
 from os import path
+import json
 
 # number of words to use in search
-N = 1000
+N = 20000
 data_path = "data/"
 
 def generate_wordsList(model, topNWords):
@@ -16,22 +17,23 @@ def generate_wordsList(model, topNWords):
         word_vector = model.get_vector(word)
         arr = np.append(arr, np.array([word_vector]), axis=0)
         
-    
-    # find tsne coords for 2 dimensions
+    # find tsne coords for 1 dimensions
     tsne = TSNE(n_components=1, random_state=0)
     np.set_printoptions(suppress=True)
     Y = tsne.fit_transform(arr)
 
     li = Y[:, 0]
 
-    return li
-
+    return li.tolist()
 
 
 def main():
+
+
+    print("\n" * 3)
     
     print("using word count: ", N)
-    #load the model from gensim
+    # load the model from gensim
     print("loading word2vec vectors...")
     model = gensim.models.KeyedVectors.load_word2vec_format(path.join(data_path, 'GoogleNews-vectors-negative300.bin.gz'), binary=True)
 
@@ -60,14 +62,19 @@ def main():
       word2index[wordIndex[i]] = i
 
 
-    print("input search word")
-    searchWord = input()
+    # save word2index and li to json's, we will need these later when using the search
+    print("dumping word2index and list of words to json files (word2index.json, wordlist.json)")
 
-    lower = max(0, word2index[searchWord] - 5)
-    upper = min(len(word2index) - 1, word2index[searchWord] + 5)
+    with open("word2index.json", "w") as w2i:
+        json.dump(word2index, w2i) 
 
-    for i in range(lower, upper + 1):
-      print(wordIndex[i])
+    with open("wordslist.json", "w") as wl:
+        json.dump(wordIndex, wl)
+
+
+    print("done")
+
+   
 
 if __name__ == "__main__":
     main()
